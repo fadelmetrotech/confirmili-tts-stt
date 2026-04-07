@@ -44,7 +44,7 @@ EMOTIONS = {"professional": 0, "enthusiastic": 1, "assertive": 2, "apologetic": 
 # ── Load STT ──────────────────────────────────────────────────────────────────
 print("[STT] Loading faster-whisper...")
 from faster_whisper import WhisperModel
-_stt_model = WhisperModel(STT_DIR, device=DEVICE, compute_type="float16")
+_stt_model = WhisperModel(STT_DIR, device=DEVICE, compute_type="float16" if DEVICE == "cuda" else "int8")
 print("[STT] Ready!")
 
 # ── Load TTS ──────────────────────────────────────────────────────────────────

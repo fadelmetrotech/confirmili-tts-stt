@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:2.2.0-cuda12.1-cudnn8-runtime
+FROM pytorch/pytorch:2.2.0-cuda11.8-cudnn8-runtime
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
 
 # Python deps
 RUN pip install --no-cache-dir runpod faster-whisper soundfile numpy
-RUN pip install --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cu121
+RUN pip install --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cu118
 
 # F5-TTS
 RUN git clone https://github.com/SWivid/F5-TTS.git /app/F5-TTS && \
