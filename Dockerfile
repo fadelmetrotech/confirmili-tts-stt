@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:2.2.0-cuda11.8-cudnn8-runtime
+FROM pytorch/pytorch:2.4.0-cuda12.1-cudnn9-runtime
 
 WORKDIR /app
 
@@ -16,8 +16,8 @@ RUN git clone https://github.com/SWivid/F5-TTS.git /app/F5-TTS && \
 
 # Force-reinstall CUDA builds of torch+torchaudio AFTER F5-TTS
 RUN pip install --no-cache-dir --force-reinstall \
-    torch==2.2.0 torchaudio==2.2.0 \
-    --index-url https://download.pytorch.org/whl/cu118
+    torch==2.4.0 torchaudio==2.4.0 \
+    --index-url https://download.pytorch.org/whl/cu121
 
 # Overwrite public F5-TTS model files with our custom emotion-aware versions
 COPY dit.py /app/F5-TTS/src/f5_tts/model/backbones/dit.py
