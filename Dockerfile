@@ -8,7 +8,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Python deps
-RUN pip install --no-cache-dir runpod faster-whisper soundfile numpy
+RUN pip install --no-cache-dir runpod soundfile numpy && \
+    pip install --no-cache-dir "ctranslate2==4.3.1" "faster-whisper==1.0.3"
 
 # F5-TTS (installs torchaudio from PyPI, which may be CPU-only)
 RUN git clone https://github.com/SWivid/F5-TTS.git /app/F5-TTS && \
