@@ -7,8 +7,9 @@ RUN apt-get update && apt-get install -y \
     git ffmpeg libsndfile1 build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Python deps
-RUN pip install --no-cache-dir runpod soundfile numpy && \
+# Python deps - Upgrade pip first to fix backtracking bugs
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir fastapi==0.104.1 pydantic==1.10.13 runpod soundfile numpy && \
     pip install --no-cache-dir "ctranslate2==4.3.1" "faster-whisper==1.0.3"
 
 # F5-TTS (installs torchaudio from PyPI, which may be CPU-only)

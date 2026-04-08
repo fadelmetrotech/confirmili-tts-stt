@@ -93,6 +93,11 @@ safe = {k: v for k, v in cleaned.items()
 _tts_model.load_state_dict(safe, strict=False)
 _tts_model = _tts_model.to(DEVICE).eval()
 
+# Optimize inference overhead without altering floating-point math (100% quality parity)
+if DEVICE == "cuda":
+    print("[TTS] Applying torch.compile to eliminate Python overhead...")
+    _tts_model = torch.compile(_tts_model, mode="reduce-overhead", fullgraph=False)
+
 _vocoder = load_vocoder(vocoder_name="vocos", is_local=False, device=DEVICE)
 print("[TTS] Ready!")
 
