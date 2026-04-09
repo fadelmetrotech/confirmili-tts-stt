@@ -93,10 +93,10 @@ safe = {k: v for k, v in cleaned.items()
 _tts_model.load_state_dict(safe, strict=False)
 _tts_model = _tts_model.to(DEVICE).eval()
 
-# Optimize inference overhead without altering floating-point math (100% quality parity)
-if DEVICE == "cuda":
-    print("[TTS] Applying torch.compile to eliminate Python overhead...")
-    _tts_model = torch.compile(_tts_model, mode="reduce-overhead", fullgraph=False)
+# Optimize inference overhead (Disabled: torch.compile causes flow matching quality degradation)
+# if DEVICE == "cuda":
+#     print("[TTS] Applying torch.compile to eliminate Python overhead...")
+#     _tts_model = torch.compile(_tts_model, mode="reduce-overhead", fullgraph=False)
 
 _vocoder = load_vocoder(vocoder_name="vocos", is_local=False, device=DEVICE)
 print("[TTS] Ready!")
@@ -145,7 +145,7 @@ def _transcribe(audio_bytes: bytes) -> str:
     return "".join(s.text for s in segments).strip()
 
 # ── TTS ───────────────────────────────────────────────────────────────────────
-def _synthesize(text: str, emotion: str = "professional", voice: str = "aisha_happy") -> str:
+def _synthesize(text: str, emotion: str = "professional", voice: str = "aisha_happy", duration_scale: float = 1.0) -> str:
     eid = EMOTIONS.get(emotion, 0)
     cond = _load_voice(voice)
 
@@ -162,8 +162,9 @@ def _synthesize(text: str, emotion: str = "professional", voice: str = "aisha_ha
 
     ref_chars      = max(len(ref_text), 1)
     gen_chars      = max(len(text), 1)
-    duration_ratio = int(ref_mel_len / ref_chars * gen_chars)
-    total_frames   = ref_mel_len + max(duration_ratio, 50)
+    duration_ratio = float(ref_mel_len) / float(ref_chars) * float(gen_chars)
+    total_frames   = ref_mel_len + int(duration_ratio * duration_scale)
+    total_frames   = max(total_frames, ref_mel_len + 50)
     total_frames   = min(total_frames, 8192)
 
     emo_t = torch.LongTensor([eid]).to(DEVICE)
@@ -189,7 +190,7 @@ def _synthesize(text: str, emotion: str = "professional", voice: str = "aisha_ha
     wav = wav.clip(-1.0, 1.0)
 
     buf = io.BytesIO()
-    sf.write(buf, wav, 24000, format="WAV")
+    sf.write(buf, wav, 24000, format="WAV", subtype="PCM_16")
     return base64.b64encode(buf.getvalue()).decode()
 
 # ── RunPod handler ────────────────────────────────────────────────────────────
@@ -208,7 +209,8 @@ def handler(job):
             text    = inp["text"]
             emotion = inp.get("emotion", "professional")
             voice   = inp.get("voice", "aisha_happy")
-            audio   = _synthesize(text, emotion, voice)
+            d_scale = float(inp.get("duration_scale", 1.25))
+            audio   = _synthesize(text, emotion, voice, d_scale)
             if audio is None:
                 return {"error": "TTS generated 0 frames"}
             return {"audio": audio}
